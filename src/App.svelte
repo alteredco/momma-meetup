@@ -3,13 +3,7 @@
   import MeetupGrid from "./Meetups/MeetupGrid.svelte";
   import TextInput from "./Components/TextInput.svelte";
   import Button from "./Components/Button.svelte";
-
-  let title = "";
-  let subtitle = "";
-  let address = "";
-  let email = "";
-  let description = "";
-  let imageUrl = "";
+  import EditMeetup from "./Meetups/EditMeetup.svelte";
 
   let meetups = [
     {
@@ -21,7 +15,8 @@
       imageUrl:
         "https://images.unsplash.com/photo-1477925181867-37d89ee64b58?ixlib=rb-1.2.1&auto=format&fit=crop&w=1645&q=80",
       address: "234 Returner Road, 32324 Brussels",
-      contactEmail: "catchem@test.com"
+      contactEmail: "catchem@test.com",
+      isFavorite: false
     },
     {
       id: "m2",
@@ -31,7 +26,8 @@
       imageUrl:
         "https://images.unsplash.com/photo-1520736179427-d7f281fc39f0?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80",
       address: "234 Kiddy Corner, 32322 Brussels",
-      contactEmail: "bakeem@test.com"
+      contactEmail: "bakeem@test.com",
+      isFavorite: false
     },
     {
       id: "m3",
@@ -41,23 +37,37 @@
       imageUrl:
         "https://images.unsplash.com/photo-1554902748-feaf536fc594?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1650&q=80",
       address: "234 Codery Corner, 32122 Brussels",
-      contactEmail: "codeem@test.com"
+      contactEmail: "codeem@test.com",
+      isFavorite: false
     }
   ];
 
-  function addMeetup() {
+  function addMeetup(event) {
     const newMeetup = {
       id: Math.random().toString(),
-      title: title,
-      subtitle: subtitle,
-      description: description,
-      imageUrl: imageUrl,
-      contactEmail: email,
-      address: address
+      title: event.detail.title,
+      subtitle: event.detail.subtitle,
+      description: event.detail.description,
+      imageUrl: event.detail.imageUrl,
+      contactEmail: event.detail.email,
+      address: event.detail.address
     };
 
     meetups = [newMeetup, ...meetups];
+    editMode = null;
   }
+
+  function toggleFavorite(event) {
+    const id = event.detail;
+    const updatedMeetup = { ...meetups.find(m => m.id === id) };
+    updatedMeetup.isFavorite = !updatedMeetup.isFavorite;
+    const meetupIndex = meetups.findIndex(m => m.id === id);
+    const updatedMeetups = [...meetups];
+    updatedMeetups[meetupIndex] = updatedMeetup;
+    meetups = updatedMeetups;
+  }
+
+  let editMode = null;
 </script>
 
 <style>
@@ -65,56 +75,18 @@
     margin-top: 5rem;
   }
 
-  form {
-    width: 30rem;
-    max-width: 90%;
-    margin: auto;
+  .meetup-controls {
+    margin: 1rem;
   }
 </style>
 
 <Header />
 <main>
-
-  <form on:submit|preventDefault={addMeetup}>
-    <TextInput
-      type="text"
-      id="title"
-      label="Title"
-      value={title}
-      on:input={event => (title = event.target.value)} />
-    <TextInput
-      type="text"
-      id="subtitle"
-      label="Subtitle"
-      value={subtitle}
-      on:input={event => (subtitle = event.target.value)} />
-    <TextInput
-      type="text"
-      id="img"
-      label="Image Url"
-      value={imageUrl}
-      on:input={event => (imageUrl = event.target.value)} />
-    <TextInput
-      type="text"
-      id="address"
-      label="Address"
-      value={address}
-      on:input={event => (address = event.target.value)} />
-    <TextInput
-      type="text"
-      id="contact"
-      label="Contact Email"
-      value={email}
-      on:input={event => (email = event.target.value)} />
-    <TextInput
-      controlType="textarea"
-      id="desc"
-      label="Description"
-      rows="3"
-      value={description}
-      on:input={event => (description = event.target.value)} />
-    <Button type="submit" caption="Save" />
-  </form>
-
-  <MeetupGrid {meetups} />
+  <div class="meetup-controls">
+    <Button on:click={() => (editMode = 'add')}>New Meetup</Button>
+  </div>
+  {#if editMode === 'add'}
+    <EditMeetup on:saveEvent={addMeetup} />
+  {/if}
+  <MeetupGrid {meetups} on:togglefavorite={toggleFavorite} />
 </main>
